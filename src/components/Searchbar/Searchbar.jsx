@@ -21,7 +21,7 @@ export default class Searchbar extends Component {
       return toast.warning('Search field is empty!');
     }
     this.props.onSubmit(this.state.value);
-    this.setState({ value: '' });
+    // this.setState({ value: '' });
   };
 
   render() {

@@ -7,7 +7,7 @@ import Loader from './Loader/Loader';
 import Button from './Button/Button';
 import Modal from './Modal/Modal';
 
-import { toast, ToastContainer } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 export default class App extends Component {
@@ -38,13 +38,14 @@ export default class App extends Component {
       isLoading: true,
       page: page,
     });
+
     const images = await getImages(value, page);
-    if (images.totalHits === 0) {
-      this.setState({ images: [], error: true, isLoading: false });
-      toast.warning('Nothing found. Try another search.');
-      return;
-    }
-    toast.info(`Found ${images.totalHits} images`);
+    // if (images.totalHits === 0) {
+    //   this.setState({ images: [], error: true, isLoading: false });
+    //   toast.warning('Nothing found. Try another search.');
+    //   return;
+    // }
+    // toast.info(`Found ${images.totalHits} images`);
     this.setState({
       images: images.hits,
       totalHits: images.totalHits,
