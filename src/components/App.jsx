@@ -1,4 +1,5 @@
-import React, { Component } from 'react';
+import React from 'react';
+import { useState, useEffect } from 'react';
 
 import getImages from './API/API';
 import Searchbar from './Searchbar/Searchbar';
@@ -10,75 +11,77 @@ import Modal from './Modal/Modal';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-export default class App extends Component {
-  state = {
-    images: [],
-    value: '',
-    page: 1,
-    isLoading: false,
-    modal: '',
-  };
+export default function App() {
+  const [images, setImages] = useState([]);
+  const [request, setRequest] = useState('');
+  const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [modal, setModal] = useState('');
+  const [totalHits, setTotalHits] = useState(null);
+  useEffect(() => {
+    const fetchImg = async () => {
+      setIsLoading(true);
+      const images = await getImages(request, page);
 
-  async componentDidUpdate(pervProps, prevState) {
-    const { value, page } = this.state;
+      setImages(prevState => [...prevState, ...images.hits]);
+    };
 
-    if (prevState.page !== page && page !== 1) {
-      this.setState({ isLoading: true });
-      const images = await getImages(value, page);
-      this.setState(() => ({
-        images: [...this.state.images, ...images.hits],
-        isLoading: false,
-      }));
+    if (page > 1) {
+      fetchImg();
     }
-  }
-  onSubmit = async value => {
+    setIsLoading(false);
+  }, [page, request]);
+
+  // async componentDidUpdate(pervProps, prevState) {
+  //   const { value, page } = this.state;
+
+  //   if (
+  //     (prevState.page !== page && page !== 1) ||
+  //     prevState.value !== this.state.value
+  //   ) {
+  //     this.setState({ isLoading: true });
+  //     const images = await getImages(value, page);
+  //     this.setState(() => ({
+  //       images: [...images, ...hits],
+  //       isLoading: false,
+  //       totalHits: images.totalHits,
+  //     }));
+  //   }
+
+  const onSubmit = async value => {
     const page = 1;
-    this.setState({
-      value: value,
-      isLoading: true,
-      page: page,
-    });
+    setRequest(value);
+    setPage(page);
+    setIsLoading(true);
 
     const images = await getImages(value, page);
-    // if (images.totalHits === 0) {
-    //   this.setState({ images: [], error: true, isLoading: false });
-    //   toast.warning('Nothing found. Try another search.');
-    //   return;
-    // }
-    // toast.info(`Found ${images.totalHits} images`);
-    this.setState({
-      images: images.hits,
-      totalHits: images.totalHits,
-      isLoading: false,
-    });
-  };
-  loadMore = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
+    setImages(images.hits);
+    setTotalHits(images.totalHits);
+    setIsLoading(false);
   };
 
-  toggleModal = modal => {
-    this.setState({ modal });
+  const loadMore = () => {
+    setPage(prevState => prevState + 1);
   };
-  render() {
-    console.log(getImages('cat', 1));
-    const { images, isLoading, totalHits, modal } = this.state;
-    return (
-      <div className="App">
-        <Searchbar onSubmit={this.onSubmit} />
-        {images.length !== 0 ? (
-          <ImageGallery images={images} openModal={this.toggleModal} />
-        ) : null}
-        {isLoading ? <Loader /> : null}
-        {images.length !== 0 && !isLoading && images.length !== totalHits && (
-          <Button onClick={this.loadMore} />
-        )}
-        {modal && (
-          <Modal images={images} modal={modal} closeModal={this.toggleModal} />
-        )}
-        <ToastContainer autoClose={3000} />
-      </div>
-    );
-  }
+
+  const toggleModal = modal => {
+    setModal(modal);
+  };
+
+  return (
+    <div className="App">
+      <Searchbar onSubmit={onSubmit} />
+      {images.length !== 0 ? (
+        <ImageGallery images={images} openModal={toggleModal} />
+      ) : null}
+      {isLoading ? <Loader /> : null}
+      {images.length !== 0 && !isLoading && images.length !== totalHits && (
+        <Button onClick={loadMore} />
+      )}
+      {modal && (
+        <Modal images={images} modal={modal} closeModal={toggleModal} />
+      )}
+      <ToastContainer autoClose={3000} />
+    </div>
+  );
 }
